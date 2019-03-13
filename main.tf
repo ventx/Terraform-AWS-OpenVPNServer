@@ -3,11 +3,11 @@ provider "aws" {
   profile = "${var.profile}"
 }
 
-data "aws_vpc" "target" {
+data "aws_vpc" "vpc" {
   id = "${var.vpc}"
 }
 
-data "aws_route53_zone" "target" {
+data "aws_route53_zone" "hostedzone" {
   name         = "${var.domain}"
   private_zone = false
 }
@@ -88,6 +88,4 @@ module "openvpninstance" {
   subnetid     = "${var.subnetid}"
   keyname      = "${var.keyname}"
   adminurl     = "${var.domain}"
-
-
 }

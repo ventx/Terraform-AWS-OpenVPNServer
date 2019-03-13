@@ -53,8 +53,8 @@ variable "keyname" {
   description = "SSH Access Key"
 }
 variable "adminurl" {
-  description = "OpenVPN Aadmin login"
+  description = "OpenVPN Admin login"
 }
 variable "profile" {
-  description = "Aws Profile to use"
+  description = "AWS Profile to use"
 }

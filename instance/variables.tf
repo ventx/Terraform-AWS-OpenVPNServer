@@ -1,17 +1,17 @@
 variable "ami" {
-  description = "ami to be used"
+  description = "AMI to be used"
 }
 variable "instancetype" {
-  description = "ec2 instance"
+  description = "EC2 instance type"
 }
 variable "instancename" {
-  description = "esc instance name"
+  description = "EC2 instance name"
 }
 variable "keyname" {
-  description = "sshkeyname"
+  description = "SSH key name"
 }
 variable "sg" {
-  description = "security group"
+  description = "Security Group"
 }
 variable "key_country" {
   description = "key_country"
@@ -32,13 +32,13 @@ variable "key_ou" {
   description = "key_ou"
 }
 variable "passwd" {
-  description = "openvpn admin password"
+  description = "OpenVPN admin password"
 }
 variable "domain" {
-  description = "openvpn server TLD"
+  description = "OpenVPN server TLD"
 }
 variable "sslmail" {
-  description = "email for letsencrypt"
+  description = "E-Mail for LetsEncrypt"
 }
 variable "owner" {
   description = "Owner Tag for AWS console"
@@ -50,6 +50,6 @@ variable "subnetid" {
   description = "Subnet for the VPN Instance"
 }
 variable "adminurl" {
-  description = "OpenVPN Aadmin login"
+  description = "OpenVPN Admin login"
 }
 
