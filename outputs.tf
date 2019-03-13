@@ -4,7 +4,7 @@ output "arn" {
 }
 output "iprange" {
   value = "${data.aws_vpc.target.cidr_block}"
-  description ="VPC Iprage"
+  description ="VPC IP Range (CIDR block)"
 }
 output "route table" {
   value = "${data.aws_vpc.target.main_route_table_id}"
@@ -12,11 +12,11 @@ output "route table" {
 }
 output "instancearn" {
   value = "${module.openvpninstance.instancename}"
-  description ="Instance ARN"
+  description ="EC2 Instance ARN"
 }
 output "pubplicip" {
   value = "${module.openvpninstance.publicip}"
-  description ="The Instance Public IP"
+  description ="The EC2 Instance Public IPv4 address"
 }
 output "userdata" {
   value = "${module.openvpninstance.userdata}"
@@ -40,7 +40,7 @@ output "vpc_name" {
 }
 output "privateip" {
   value = "${module.openvpninstance.privateip}"
-  description ="Instance Private IP"
+  description ="EC2 Instance Private IPv4"
 }
 output "Domain Name" {
   value = "${aws_route53_record.www.fqdn}"
@@ -52,10 +52,9 @@ output "adminurl" {
 }
 output "instancetype" {
   value = "${module.openvpninstance.instancetype}"
-  description ="Instance Type"
+  description ="EC2 Instance Type"
 }
 output "keyname" {
   value = "${module.openvpninstance.keyname}"
   description ="SSH Access Key Name"
 }
-
