@@ -18,7 +18,7 @@ To use `./sacli` navigate to `/usr/local/openvpn_as/scripts/ `
 
 Default settings never route any client traffic through the VPN
 
-you can change this in `userdata.sh` befor creating the instance but you also can change this after that on the EC2 Instance.
+You can change this in `userdata.sh` befor creating the instance but you also can change this after that on the EC2 Instance.
 
 **sacli commands examples** _(no client traffic routing through the VPN connection)_
 

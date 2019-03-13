@@ -2,7 +2,7 @@
 output "instancename" {
   value = "${aws_instance.openvpnserver.arn}"
 }
-// Instance Pupblic IP
+// Instance Pupblic IPv4
 output "publicip" {
   value = "${aws_instance.openvpnserver.public_ip}"
 }
@@ -10,7 +10,7 @@ output "publicip" {
 output "userdata" {
   value = "${aws_instance.openvpnserver.user_data}"
 }
-// Insatece Private IP
+// Instance Private IPv4
 output "privateip" {
   value = "${aws_instance.openvpnserver.private_ip}"
 }
