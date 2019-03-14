@@ -3,6 +3,10 @@
 ## Range of application 
 Deploys an **OpenVPN** and **Access Server** with Letsencrypt SSL Certificate on EC2
 
+## THis is just a test
+
+
+
 ## Basic Settings
 Customize your OpenVPNServer with these [Inputs](#Inputs)
 
@@ -42,7 +46,7 @@ Password: ( set your password with `${var.passwd}`
 
 | Name | Description | Type | Default | Required |
 |------|-------------|:----:|:-----:|:-----:|
-| adminurl | OpenVPN Aadmin login | string | n/a | yes |
+| adminurl | OpenVPN Admin login | string | n/a | yes |
 | ami | AWS AMI to use | string | n/a | yes |
 | domain | Domain Name | string | n/a | yes |
 | instancename | Name of the Instance | string | n/a | yes |
