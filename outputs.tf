@@ -1,60 +1,34 @@
-output "arn" {
-  value = "${data.aws_vpc.target.arn}"
-  description ="Your VPC ARN"
+// Instance Name
+output "instancename" {
+  value = "${aws_instance.openvpnserver.arn}"
 }
-output "iprange" {
-  value = "${data.aws_vpc.target.cidr_block}"
-  description ="VPC IP Range (CIDR block)"
+
+// Instance Pupblic IPv4
+output "publicip" {
+  value = "${aws_instance.openvpnserver.public_ip}"
 }
-output "route table" {
-  value = "${data.aws_vpc.target.main_route_table_id}"
-  description ="Route Table"
-}
-output "instancearn" {
-  value = "${module.openvpninstance.instancename}"
-  description ="EC2 Instance ARN"
-}
-output "pubplicip" {
-  value = "${module.openvpninstance.publicip}"
-  description ="The EC2 Instance Public IPv4 address"
-}
+
+// Userdata for OpenVPNServer Setup
 output "userdata" {
-  value = "${module.openvpninstance.userdata}"
-  description ="Userdata Hash"
+  value = "${aws_instance.openvpnserver.user_data}"
 }
-output "sg_id" {
-  value = "${aws_security_group.vpnsecuritygroup.id}"
-  description ="SecurityGroup ID"
-}
-output "sg_name" {
-  value = "${aws_security_group.vpnsecuritygroup.name}"
-  description ="SecurityGroup Name"
-}
-output "vpc_id" {
-  value = "${data.aws_vpc.target.id}"
-  description ="VPC ID"
-}
-output "vpc_name" {
-  value = "${data.aws_vpc.target.arn}"
-  description ="VPC Name"
-}
+
+// Instance Private IPv4
 output "privateip" {
-  value = "${module.openvpninstance.privateip}"
-  description ="EC2 Instance Private IPv4"
+  value = "${aws_instance.openvpnserver.private_ip}"
 }
-output "Domain Name" {
-  value = "${aws_route53_record.www.fqdn}"
-  description ="TLD for the OpenVPNServer"
-}
-output "adminurl" {
-  value = "https://${aws_route53_record.www.fqdn}/admin"
-  description ="Admin Access URL for the OpenVPNServer"
-}
+
+// Instance Type
 output "instancetype" {
-  value = "${module.openvpninstance.instancetype}"
-  description ="EC2 Instance Type"
+  value = "${aws_instance.openvpnserver.instance_type}"
 }
+
+// Instance SSH Keyname
 output "keyname" {
-  value = "${module.openvpninstance.keyname}"
-  description ="SSH Access Key Name"
+  value = "${aws_instance.openvpnserver.key_name}"
+}
+
+output "adminurl" {
+  value       = "https://${aws_route53_record.www.fqdn}/admin"
+  description = "Admin Access URL for the OpenVPNServer"
 }
