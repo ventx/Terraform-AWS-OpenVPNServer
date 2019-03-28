@@ -1,9 +1,8 @@
 ![alt text](https://www.ventx.de/images/logo.png "Ventx Logo")
 # Terraform AWS OpenVPNServer
-## Range of application 
+## Range of application
 Deploys an **OpenVPN** and **Access Server** with Letsencrypt SSL Certificate on EC2
 
-## THis is just a test
 
 
 
@@ -27,9 +26,9 @@ You can change this in `userdata.sh` befor creating the instance but you also ca
 **sacli commands examples** _(no client traffic routing through the VPN connection)_
 
  ```bash
-  ./sacli --key "vpn.client.routing.reroute_dns" --value "false" ConfigPut 
-  ./sacli --key "vpn.client.routing.reroute_gw" --value "false" ConfigPut 
-  
+  ./sacli --key "vpn.client.routing.reroute_dns" --value "false" ConfigPut
+  ./sacli --key "vpn.client.routing.reroute_gw" --value "false" ConfigPut
+
  ```
 ## Usage
 If everything went well :)  you can access your OpenVPN Access server via your browser.
@@ -46,8 +45,7 @@ Password: ( set your password with `${var.passwd}`
 
 | Name | Description | Type | Default | Required |
 |------|-------------|:----:|:-----:|:-----:|
-| adminurl | OpenVPN Admin login | string | n/a | yes |
-| ami | AWS AMI to use | string | n/a | yes |
+| ami | AWS AMI to use | string | ami-090f10efc254eaf55 | no |
 | domain | Domain Name | string | n/a | yes |
 | instancename | Name of the Instance | string | n/a | yes |
 | instancetype | AWS Instance Type | string | n/a | yes |
@@ -86,7 +84,3 @@ Password: ( set your password with `${var.passwd}`
 | userdata | Userdata Hash |
 | vpc\_id | VPC ID |
 | vpc\_name | VPC Name |
-
-
-
-

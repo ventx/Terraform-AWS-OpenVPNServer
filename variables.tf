@@ -1,60 +1,80 @@
-variable "region" {
-  description = "Region to use"
+variable "ami" {
+  description = "AMI to be used, default is Ubuntu 18.67 Bionic"
+  default     = "ami-090f10efc254eaf55"
 }
+
+variable "region" {
+  description = "AWS Region"
+}
+
+variable "vpc" {
+  description = "AWS VPC"
+}
+
+variable "profile" {
+  description = "AWS Profile"
+}
+
+variable "instancetype" {
+  description = "EC2 instance type"
+}
+
+variable "instancename" {
+  description = "EC2 instance name"
+}
+
+variable "keyname" {
+  description = "SSH key name"
+}
+
+variable "key_country" {
+  description = "key_country"
+}
+
+variable "key_province" {
+  description = "key_province"
+}
+
+variable "key_city" {
+  description = "key_city"
+}
+
+variable "key_org" {
+  description = "key_org"
+}
+
+variable "key_email" {
+  description = "key_email"
+}
+
+variable "key_ou" {
+  description = "key_ou"
+}
+
+variable "passwd" {
+  description = "OpenVPN admin password"
+}
+
+variable "domain" {
+  description = "OpenVPN server TLD"
+}
+
+variable "sslmail" {
+  description = "E-Mail for LetsEncrypt"
+}
+
+variable "owner" {
+  description = "Owner Tag for AWS console"
+}
+
 variable "subdomain" {
   description = "Subdomain"
 }
-variable "ami" {
-  description = "AWS AMI to use"
-}
-variable "instancetype" {
-  description = "AWS Instance Type"
-}
-variable "instancename" {
-  description = "Name of the Instance"
-}
-variable "key_country" {
-  description = "OpenVPN CA Country Name"
-}
-variable "key_province" {
-  description = "OpenVPN CA Province Name"
-}
-variable "key_city" {
-  description = "OpenVPN CA City Name"
-}
-variable "key_org" {
-  description = "OpenVPN CA Organisation Name"
-}
-variable "key_email" {
-  description = "OpenVPN CA Email Contact"
-}
-variable "key_ou" {
-  description = "OpenVPN Organisation Unit Name"
-}
-variable "passwd" {
-  description = "OpenVPN User Password for AdminUser:openvpn"
-}
-variable "domain" {
-  description = "Domain Name"
-}
-variable "sslmail" {
-  description = "LetsEncrypt Contact Email"
-}
-variable "owner" {
-  description = "AWS Tag for Owner"
-}
-variable "vpc" {
-  description = "AWS VPC to be used"
-}
+
 variable "subnetid" {
-  description = "Subnet for the EC2 instance"
+  description = "Subnet for the VPN Instance"
 }
-variable "keyname" {
-  description = "SSH Access Key"
-}
+
 variable "adminurl" {
   description = "OpenVPN Admin login"
-}
-variable "profile" {
-  description = "AWS Profile to use"
 }

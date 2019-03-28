@@ -3,27 +3,10 @@ provider "aws" {
   profile = "${var.profile}"
 }
 
-data "aws_vpc" "vpc" {
-  id = "${var.vpc}"
-}
-
-data "aws_route53_zone" "hostedzone" {
-  name         = "${var.domain}"
-  private_zone = false
-}
-
-resource "aws_route53_record" "www" {
-  zone_id = "${data.aws_route53_zone.target.zone_id}"
-  name    = "${var.subdomain}.${data.aws_route53_zone.target.name}"
-  type    = "A"
-  ttl     = "30"
-  records = ["${module.openvpninstance.publicip}"]
-}
-
 resource "aws_security_group" "vpnsecuritygroup" {
   name        = "Open VPN Security Group"
   description = "Allow http and https"
-  vpc_id      = "${data.aws_vpc.target.id}"
+  vpc_id      = "${data.aws_vpc.selected.id}"
 
   ingress {
     from_port   = 22
@@ -68,24 +51,53 @@ resource "aws_security_group" "vpnsecuritygroup" {
   }
 }
 
-module "openvpninstance" {
-  ami          = "${var.ami}"
-  instancetype = "${var.instancetype}"
-  source       = "./instance"
-  instancename = "${var.instancename}"
-  sg           = "${aws_security_group.vpnsecuritygroup.id}"
-  key_country  = "${var.key_country}"
-  key_province = "${var.key_province}"
-  key_city     = "${var.key_city}"
-  key_org      = "${var.key_org}"
-  key_email    = "${var.key_email}"
-  key_ou       = "${var.key_ou}"
-  passwd       = "${var.passwd}"
-  domain       = "${var.domain}"
-  sslmail      = "${var.sslmail}"
-  owner        = "${var.owner}"
-  subdomain    = "${var.subdomain}"
-  subnetid     = "${var.subnetid}"
-  keyname      = "${var.keyname}"
-  adminurl     = "${var.domain}"
+resource "aws_instance" "openvpnserver" {
+  ami             = "${var.ami}"
+  instance_type   = "${var.instancetype}"
+  user_data       = "${data.template_file.userdata.rendered}"
+  key_name        = "${var.keyname}"
+  security_groups = ["${aws_security_group.vpnsecuritygroup.id}"]
+  subnet_id       = "${var.subnetid}"
+
+  tags = {
+    Owner = "${var.owner}"
+    Name  = "${var.instancename}"
+  }
+}
+
+data "template_file" "userdata" {
+  template = "${file("userdata.sh")}"
+
+  vars {
+    key_country  = "${var.key_country}"
+    key_province = "${var.key_province}"
+    key_city     = "${var.key_city}"
+    key_org      = "${var.key_org}"
+    key_email    = "${var.key_email}"
+    key_ou       = "${var.key_ou}"
+    passwd       = "${var.passwd}"
+    domain       = "${var.domain}"
+    sslmail      = "${var.sslmail}"
+    subdomain    = "${var.subdomain}"
+    instancetype = "${var.instancetype}"
+    keyname      = "${var.keyname}"
+    adminurl     = "${var.domain}"
+  }
+}
+
+data "aws_vpc" "selected" {
+  id = "${var.vpc}"
+}
+
+data "aws_route53_zone" "hostedzone" {
+  name         = "${var.domain}"
+  private_zone = false
+}
+
+resource "aws_route53_record" "www" {
+  zone_id = "${data.aws_route53_zone.hostedzone.id}"
+  name    = "${var.subdomain}.${data.aws_route53_zone.hostedzone.name}"
+  type    = "A"
+  ttl     = "30"
+  records = ["${aws_instance.openvpnserver.public_ip}"]
 }
