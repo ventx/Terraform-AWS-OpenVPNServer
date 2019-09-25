@@ -143,4 +143,11 @@ echo  >> $log
 echo "=======27. SSL Autorenew crontab entry======" >> $log
 crontab -l | { cat; echo "40 3 * * 0 letsencrypt renew >> /var/log/letsencrypt-renew.log"; } | crontab -
 echo  >> $log
+echo "=======28. LetsEncrypt renewal-hook ======" >> $log
+echo "#! /bin/sh" >> /etc/letsencrypt/renewal-hooks/deploy/01-configput-openvpn-and-reload
+echo "set -e" >> /etc/letsencrypt/renewal-hooks/deploy/01-configput-openvpn-and-reload
+echo "/usr/local/openvpn_as/scripts/sacli --key \"cs.cert\" --value_file \"/etc/letsencrypt/live/${subdomain}.${domain}/cert.pem\" ConfigPut" >> /etc/letsencrypt/renewal-hooks/deploy/01-configput-openvpn-and-reload
+echo "/usr/local/openvpn_as/scripts/sacli --key \"cs.ca_bundle\" --value_file \"/etc/letsencrypt/live/${subdomain}.${domain}/chain.pem\" ConfigPut" >> /etc/letsencrypt/renewal-hooks/deploy/01-configput-openvpn-and-reload
+echo "/usr/local/openvpn_as/scripts/sacli --key \"cs.priv_key\" --value_file \"/etc/letsencrypt/live/${subdomain}.${domain}/privkey.pem\" ConfigPut" >> /etc/letsencrypt/renewal-hooks/deploy/01-configput-openvpn-and-reload
+echo "systemctl restart openvpnas" >> /etc/letsencrypt/renewal-hooks/deploy/01-configput-openvpn-and-reload
 echo "==============END OF Installation=============" >> $log
