@@ -40,6 +40,10 @@ Username: `openvpn`
 Password: ( set your password with `${var.passwd}`
 
 
+## Links
+
+* https://openvpn.net/vpn-server-resources/managing-settings-for-the-web-services-from-the-command-line/
+
 
 ### <a name="Inputs"></a> Inputs
 
