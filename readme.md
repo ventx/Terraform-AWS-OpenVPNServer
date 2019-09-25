@@ -1,8 +1,8 @@
 ![alt text](https://www.ventx.de/images/logo.png "Ventx Logo")
 # Terraform AWS OpenVPNServer
 ## Range of application
-Deploys an **OpenVPN** and **Access Server** with Letsencrypt SSL Certificate on EC2
-
+* Deploys an **OpenVPN** and **Access Server** with Letsencrypt SSL Certificate on EC2
+* LetsEncrypt hook to put certificate into OpenVPN-AS config and restart openvpnas service
 
 
 
