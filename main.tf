@@ -3,6 +3,23 @@ provider "aws" {
   profile = "${var.profile}"
 }
 
+data "aws_ami" "latest-ubuntu" {
+  most_recent = true
+  owners      = ["099720109477"] # Canonical
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
+
+
 resource "aws_security_group" "vpnsecuritygroup" {
   name        = "Open VPN Security Group"
   description = "Allow http and https"
@@ -52,7 +69,7 @@ resource "aws_security_group" "vpnsecuritygroup" {
 }
 
 resource "aws_instance" "openvpnserver" {
-  ami             = "${var.ami}"
+  ami             = data.aws_ami.latest-ubuntu.id
   instance_type   = "${var.instancetype}"
   user_data       = "${data.template_file.userdata.rendered}"
   key_name        = "${var.keyname}"
@@ -68,7 +85,7 @@ resource "aws_instance" "openvpnserver" {
 data "template_file" "userdata" {
   template = "${file("userdata.sh")}"
 
-  vars {
+  vars = {
     key_country  = "${var.key_country}"
     key_province = "${var.key_province}"
     key_city     = "${var.key_city}"

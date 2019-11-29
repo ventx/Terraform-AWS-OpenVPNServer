@@ -1,153 +1,137 @@
 #!/bin/bash
 ##########################################
 # Install OpenVPN Server on Ubuntu 18.04 #
-#              Ventx GmbH                #
+#             by ventx GmbH              #
 ##########################################
-
-# Path for Setup Logfile
-log="/tmp/setup.log"
 
 # Path for openvpn vars
 vars="/home/ubuntu/openvpn-ca/vars"
 
+export DEBIAN_FRONTEND=noninteractive
+
 # Starting Setup
-echo "=======Installation started=====" > $log
-echo "=======1. Updating Sourcelists=======" >> $log
-sudo apt-get update -y  >> $log
-echo  >> $log
-echo "=======2. Installing openvpn and easy rda=======" >> $log
-sudo apt-get install openvpn easy-rsa openssl net-tools -y  >> $log
-echo  >> $log
-echo "=======3. Create openvpn-ca folder=======" >> $log
+echo "=======[ Installation started ]====="
+echo "=======| 1. Update, upgrade and install tools"
+apt-get update
+apt-get upgrade -q -y | tee -a
+apt-get install ca-certificates chrony wget net-tools -y
+
+echo "=======| 2. Install certbot, openvpn-as and mysql-client"
+echo "deb http://as-repository.openvpn.net/as/debian bionic main" > /etc/apt/sources.list.d/openvpn-as-repo.list
+wget -qO - https://as-repository.openvpn.net/as-repo-public.gpg | apt-key add -
+add-apt-repository ppa:certbot/certbot -y
+apt-get update
+apt-get install certbot easy-rsa openssl openvpn-as python3-pip -q -y
+pip3 install awscli
+
+echo "=======| 3. Set Amazon Time Sync Service in Chrone on Ubuntu"
+# https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/set-time.html#configure-amazon-time-service-ubuntu
+sed -i '/^pool ntp.ubuntu.com\s*iburst maxsources 4.*/i server 169.254.169.123 prefer iburst minpoll 4 maxpoll 4' /etc/chrony/chrony.conf
+systemctl restart chrony
+
+echo "=======| 4. Create openvpn-ca dir"
 make-cadir /home/ubuntu/openvpn-ca
-chown ubuntu: /home/ubuntu/openvpn-ca/
-chmod 755 -R /home/ubuntu/openvpn-ca/
-chown ubuntu: /home/ubuntu/openvpn-ca/keys/
-chmod 755 -R  /home/ubuntu/openvpn-ca/keys/
-echo  >> $log
-echo "=======4. Go to openvpn-ca/=======" >> $log
-cd /home/ubuntu/openvpn-ca/
-echo  >> $log
-echo "=======5. Empty file openvpn-ca/vars=======" >> $log
+mkdir -p /home/ubuntu/openvpn-ca/keys
+
+echo "=======| 5. Create openssl config from default"
+cp /home/ubuntu/openvpn-ca/openssl-1.*.cnf /home/ubuntu/openvpn-ca/openssl.cnf
+
+# RANDFILE not needed for OpenSSL >=1.1.1 anymore
+# https://github.com/openssl/openssl/issues/7754
+sed -i '/^RANDFILE/ d' /home/ubuntu/openvpn-ca/openssl.cnf
+
+chown -R ubuntu: /home/ubuntu/openvpn-ca/ && chmod 755 -R /home/ubuntu/openvpn-ca/
+cd /home/ubuntu/openvpn-ca/ || exit
+
+echo "=======| 6. Empty openvpn-ca/vars"
 truncate -s0 $vars
-echo  >> $log
-echo "=======6. Get Vars from Terraform======" >> $log
-echo export EASY_RSA='"`pwd`"' >> $vars
-echo export OPENSSL='"openssl"' >> $vars
-echo export PKCS11TOOL='"pkcs11-tool"' >> $vars
-echo export GREP='"grep"' >> $vars
-echo export KEY_CONFIG='"`$EASY_RSA/whichopensslcnf $EASY_RSA`"' >> $vars
-define
-echo export KEY_DIR='"$EASY_RSA/keys"' >> $vars
-echo export PKCS11_MODULE_PATH='"dummy"' >> $vars
-echo export PKCS11_PIN='"dummy"' >> $vars
-echo export KEY_SIZE=2048 >> $vars
-echo export CA_EXPIRE=3650 >> $vars
-echo export KEY_EXPIRE=3650 >> $vars
-echo export KEY_COUNTRY= '"${key_country}"' >> $vars
-echo export KEY_PROVINCE='"${key_province}"' >> $vars
-echo export KEY_CITY='"${key_city}"' >> $vars
-echo export KEY_ORG='"${key_org}"' >> $vars
-echo export KEY_EMAIL='"${key_email}"' >> $vars
-echo export KEY_OU='"${key_ou}"' >> $vars
-echo export KEY_NAME='"openvpnserver"' >> $vars
-echo  >> $log
-echo "=======7. Write openvpn-ca/vars=======" >> $log
-cat $vars >> $log
-echo  >> $log
-echo "=======8. Rename openssl cnf=======" >> $log
-mv openssl-1.0.0.cnf openssl.cnf
-echo  >> $log
-echo "=======9. Run source vars command=======" >> $log
-source ./vars  >> $log
-source vars  >> $log
-echo  >> $log
-echo "=======10. Run clean-all command=======" >> $log
-./clean-all  >> $log
-echo  >> $log
-echo "=======11. Run build-ca=======" >> $log
-./build-ca --batch  >> $log
-echo  >> $log
-echo "=======12. Run build-ca=======" >> $log
-./build-key-server --batch openvpnserver
-echo  >> $log
-echo "=======13. Building Diffie-Hellman keys=======" >> $log
-./build-dh >> $log
-echo  >> $log
-echo "=======14. TLS integrity=======" >> $log
-openvpn --genkey --secret keys/ta.key
-echo  >> $log
-echo "=======15. Generate a Client Certificate and Key Pair======" >> $log
-cd /home/ubuntu/openvpn-ca
-source vars
-./build-key --batch client1
-echo  >> $log
-echo "=======16. Copy the Files to the OpenVPN Directory======" >> $log
-cd /home/ubuntu/openvpn-ca/keys
-sudo cp ca.crt server.crt server.key ta.key dh2048.pem /etc/openvpn
-gunzip -c /usr/share/doc/openvpn/examples/sample-config-files/server.conf.gz | sudo tee /etc/openvpn/server.conf
-echo  >> $log
-echo "=======17. Firewall======" >> $log
-sudo ufw allow 1194/udp >> $log
-sudo ufw allow OpenSSH >> $log
-sudo ufw allow 80 >> $log
-echo  >> $log
-echo "=======18. Setup OpenVPN AS Server======" >> $log
-wget https://openvpn.net/downloads/openvpn-as-latest-ubuntu18.amd_64.deb
-sha256sum openvpn-as-* >> $log
-sudo dpkg -i openvpn-as-*.deb
-echo  >> $log
-echo "=======19. Start Letsencrypt======" >> $log
-sudo add-apt-repository ppa:certbot/certbot -y >> $log
-sudo apt update >> $log
-sudo apt install certbot -y >> $log
-echo  >> $log
-echo "=======20. Request SSL Certificate======" >> $log
-sudo certbot certonly --standalone --preferred-challenges http -d "${subdomain}"."${domain}" --no-eff-email --non-interactive --agree-tos --email "${sslmail}" >> $log
-echo  >> $log
-echo  "======Letsencrypt debug vars======" >> $log
-echo  >> $log
-echo "SSL Domain -> ${subdomain}.${domain}" >> $log
-echo "LetsEncrypt Email -> ${sslmail}" >> $log
-echo  >> $log
-echo  "======21. Letsencrypt debug vars======" >> $log
-echo "=======22. Setup OpenVPN Web access======" >> $log
-#sudo ovpn-init --batch --verbose  >> $log
-echo "=======23. Set Openvpn admin password======" >> $log
-sudo echo -e ""${passwd}"\n"${passwd}"" | passwd openvpn
-echo "${passwd}" >> $log
-echo  >> $log
-echo "=======24. Setup SSL for OpenVPNServer======" >> $log
-cd  /usr/local/openvpn_as/scripts/
-sudo ./sacli --key "cs.cert" --value_file "/etc/letsencrypt/live/"${subdomain}"."${domain}"/cert.pem" ConfigPut >> $log
-sudo ./sacli --key "cs.ca_bundle" --value_file "/etc/letsencrypt/live/"${subdomain}"."${domain}"/chain.pem" ConfigPut >> $log
-sudo ./sacli --key "cs.priv_key" --value_file "/etc/letsencrypt/live/"${subdomain}"."${domain}"/privkey.pem" ConfigPut >> $log
+
+echo "=======| 7. Set variables for OpenVPN"
+{
+    echo export EASY_RSA="/home/ubuntu/openvpn-ca";
+    echo export OPENSSL="$(command -v openssl)";
+    echo export PKCS11TOOL="$(command -v pkcs11-tool)";
+    echo export GREP="$(command -v grep)";
+    echo export KEY_CONFIG="$(/home/ubuntu/openvpn-ca/whichopensslcnf /home/ubuntu/openvpn-ca)";
+} >> $vars
+
+{
+    echo export KEY_DIR="/home/ubuntu/openvpn-ca/keys";
+    echo export PKCS11_MODULE_PATH="dummy";
+    echo export PKCS11_PIN="dummy";
+    echo export KEY_SIZE=2048;
+    echo export CA_EXPIRE=1825;
+    echo export KEY_EXPIRE=1825;
+    echo export KEY_COUNTRY="${key_country}";
+    echo export KEY_PROVINCE="${key_province}";
+    echo export KEY_CITY="${key_city}";
+    echo export KEY_ORG="${key_org}";
+    echo export KEY_EMAIL="${key_email}";
+    echo export KEY_OU="${key_ou}";
+    echo export KEY_NAME="openvpnserver";
+} >> $vars
+
+echo "=======| 8. Source vars"
+source /home/ubuntu/openvpn-ca/vars
+
+echo "=======| 9. Run clean-all"
+/home/ubuntu/openvpn-ca/clean-all
+
+echo "=======| 10. Run build- commands provided by OpenVPN"
+/home/ubuntu/openvpn-ca/build-ca --batch
+/home/ubuntu/openvpn-ca/build-key-server --batch openvpnserver
+/home/ubuntu/openvpn-ca/build-dh
+
+#echo "=======| 11. Create Key"
+#openvpn --genkey --secret keys/ta.key
+
+echo "=======| 11. Generate a Client Certificate and Key Pair"
+/home/ubuntu/openvpn-ca/build-key --batch client1
+
+echo "=======| 12. Request LetsEncrypt Certificate"
+certbot certonly --standalone \
+  --non-interactive \
+  --preferred-challenges http \
+  --domains "${subdomain}"."${domain}" \
+  --no-eff-email  \
+  --agree-tos \
+  --email "${sslmail}"
+
+echo "=======| 13. Setup OpenVPN AS EC2 show routes"
+
+echo "sa.show_c2s_routes=true" >> /usr/local/openvpn_as/etc/as.conf
+
+echo "=======| 14. Set Openvpn admin password"
+echo -e ""${passwd}"\n"${passwd}"" | passwd openvpn
+
+echo "=======| 15. Settings up OpenVPN Routing"
+/usr/local/openvpn_as/scripts/sacli --key "host.name" --value ${subdomain}.${domain} ConfigPut
+/usr/local/openvpn_as/scripts/sacli --key "vpn.client.routing.reroute_dns" --value "true" ConfigPut
+/usr/local/openvpn_as/scripts/sacli --key "vpn.client.routing.reroute_gw" --value "true" ConfigPut
+
+echo "=======| 16. OpenVPN sacli Config"
+/usr/local/openvpn_as/scripts/sacli ConfigQuery
+/usr/local/openvpn_as/scripts/sacli start
+/usr/local/openvpn_as/scripts/sacli --key "cs.cert" --value_file "/etc/letsencrypt/live/"${subdomain}"."${domain}"/cert.pem" ConfigPut
+/usr/local/openvpn_as/scripts/sacli --key "cs.ca_bundle" --value_file "/etc/letsencrypt/live/"${subdomain}"."${domain}"/chain.pem" ConfigPut
+/usr/local/openvpn_as/scripts/sacli --key "cs.priv_key" --value_file "/etc/letsencrypt/live/"${subdomain}"."${domain}"/privkey.pem" ConfigPut
 chown ubuntu: /home/ubuntu/openvpn-ca/keys/
 chmod 755 -R  /home/ubuntu/openvpn-ca/keys/
-echo "=======25. Get PublicIP======" >> $log
-public_ip=$(curl http://checkip.amazonaws.com) >> $log
-echo "-> Public IP = $public_ip" >> $log
-echo  >> $log
-echo "=======26. Settings up OpenVPN Routing======" >> $log
-sudo ./sacli --key $public_ip --value eth0 ConfigPut >> $log
-sudo ./sacli --key "host.name" --value "${subdomain}"."${domain}" ConfigPut >> $log
-sudo ./sacli --key "vpn.client.routing.reroute_dns" --value "false" ConfigPut >> $log
-sudo ./sacli --key "vpn.client.routing.reroute_gw" --value "false" ConfigPut >> $log
-cd /usr/local/openvpn_as/scripts
-echo  >> $log
-echo "=======26. OpenVPN sacli Config ======" >> $log
-sudo ./sacli ConfigQuery >> $log
-echo "=======26. EN OpenVPN sacli Config ======" >> $log
-sudo ./sacli start
-echo  >> $log
-echo "=======27. SSL Autorenew crontab entry======" >> $log
+
+
+echo "=======| 21. SSL Autorenew crontab entry"
 crontab -l | { cat; echo "40 3 * * 0 letsencrypt renew >> /var/log/letsencrypt-renew.log"; } | crontab -
-echo  >> $log
-echo "=======28. LetsEncrypt renewal-hook ======" >> $log
-echo "#! /bin/sh" >> /etc/letsencrypt/renewal-hooks/deploy/01-configput-openvpn-and-reload
-echo "set -e" >> /etc/letsencrypt/renewal-hooks/deploy/01-configput-openvpn-and-reload
-echo "/usr/local/openvpn_as/scripts/sacli --key \"cs.cert\" --value_file \"/etc/letsencrypt/live/${subdomain}.${domain}/cert.pem\" ConfigPut" >> /etc/letsencrypt/renewal-hooks/deploy/01-configput-openvpn-and-reload
-echo "/usr/local/openvpn_as/scripts/sacli --key \"cs.ca_bundle\" --value_file \"/etc/letsencrypt/live/${subdomain}.${domain}/chain.pem\" ConfigPut" >> /etc/letsencrypt/renewal-hooks/deploy/01-configput-openvpn-and-reload
-echo "/usr/local/openvpn_as/scripts/sacli --key \"cs.priv_key\" --value_file \"/etc/letsencrypt/live/${subdomain}.${domain}/privkey.pem\" ConfigPut" >> /etc/letsencrypt/renewal-hooks/deploy/01-configput-openvpn-and-reload
-echo "systemctl restart openvpnas" >> /etc/letsencrypt/renewal-hooks/deploy/01-configput-openvpn-and-reload
-echo "==============END OF Installation=============" >> $log
+
+echo "=======| 22. LetsEncrypt renewal-hook"
+cat << 'EOF' > /etc/letsencrypt/renewal-hooks/deploy/01-configput-openvpn-and-reload
+#!/usr/bin/env bash
+set -e
+/usr/local/openvpn_as/scripts/sacli --key \"cs.cert\" --value_file \"/etc/letsencrypt/live/${subdomain}.${domain}/cert.pem\" ConfigPut
+echo "/usr/local/openvpn_as/scripts/sacli --key \"cs.ca_bundle\" --value_file \"/etc/letsencrypt/live/${subdomain}.${domain}/chain.pem\" ConfigPut
+echo "/usr/local/openvpn_as/scripts/sacli --key \"cs.priv_key\" --value_file \"/etc/letsencrypt/live/${subdomain}.${domain}/privkey.pem\" ConfigPut
+echo "systemctl restart openvpnas
+EOF
+
+echo "=======| 23. Restart OpenVPN AS"
+systemctl restart openvpnas
+echo "==============END OF Installation============="
