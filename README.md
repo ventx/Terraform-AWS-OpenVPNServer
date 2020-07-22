@@ -45,7 +45,7 @@ Password: ( set your password with `${var.passwd}`
 * https://openvpn.net/vpn-server-resources/managing-settings-for-the-web-services-from-the-command-line/
 
 
-### <a name="Inputs"></a> Inputs
+### Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|:----:|:-----:|:-----:|
